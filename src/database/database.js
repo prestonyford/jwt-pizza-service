@@ -82,7 +82,7 @@ class DB {
     nameFilter = nameFilter.replace(/\*/g, '%');
 
     try {
-      let users = await this.query(connection, `SELECT user.*, JSON_ARRAYAGG(JSON_OBJECT('role', userrole.role, 'objectId', userrole.objectId)) AS roles FROM user JOIN userrole on user.id = userrole.userId WHERE name LIKE ? group by user.id LIMIT ${limit + 1} OFFSET ${offset}`, [nameFilter]);
+      let users = await this.query(connection, `SELECT user.*, JSON_ARRAYAGG(JSON_OBJECT('role', userRole.role, 'objectId', userRole.objectId)) AS roles FROM user JOIN userRole on user.id = userRole.userId WHERE name LIKE ? group by user.id LIMIT ${limit + 1} OFFSET ${offset}`, [nameFilter]);
       for (const user of users) {
         delete user.password;
         for (const role of user.roles) {
