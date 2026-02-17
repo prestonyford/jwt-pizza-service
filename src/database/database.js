@@ -75,6 +75,32 @@ class DB {
     }
   }
 
+    async getUsers(page = 0, limit = 10, nameFilter = '*') {
+    const connection = await this.getConnection();
+
+    const offset = page * limit;
+    nameFilter = nameFilter.replace(/\*/g, '%');
+
+    try {
+      let users = await this.query(connection, `SELECT user.*, JSON_ARRAYAGG(JSON_OBJECT('role', userrole.role, 'objectId', userrole.objectId)) AS roles FROM user JOIN userrole on user.id = userrole.userId WHERE name LIKE ? group by user.id LIMIT ${limit + 1} OFFSET ${offset}`, [nameFilter]);
+      for (const user of users) {
+        delete user.password;
+        for (const role of user.roles) {
+          role.objectId ||= undefined;
+        }
+      }
+
+      const more = users.length > limit;
+      if (more) {
+        users = users.slice(0, limit);
+      }
+
+      return [users, more];
+    } finally {
+      connection.end();
+    }
+  }
+
   async updateUser(userId, name, email, password) {
     const connection = await this.getConnection();
     try {
