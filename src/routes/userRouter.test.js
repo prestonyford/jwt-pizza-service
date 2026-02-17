@@ -96,3 +96,40 @@ test('admin can update another user', async () => {
 	expect(res.body.user.name).toBe(newName);
 	expect(res.body).toHaveProperty('token');
 });
+
+test('list users unauthorized', async () => {
+	const listUsersRes = await request(app).get('/api/user');
+	expect(listUsersRes.status).toBe(401);
+});
+
+test('list users', async () => {
+	const name = randomName();
+	const [user, userToken] = await registerUser(name, request(app));
+	const listUsersRes = await request(app)
+		.get(`/api/user?page=0&limit=10&name=${name}`)
+		.set('Authorization', 'Bearer ' + userToken);
+	expect(listUsersRes.status).toBe(200);
+	const [users, more] = listUsersRes.body;
+	expect(more).toBe(false);
+	expect(users.length).toBeGreaterThanOrEqual(1);
+	expect(users[0].id).toBe(user.id);
+	expect(users[0].name).toBe(user.name);
+	expect(users[0].email).toBe(user.email);
+	expect(users[0].roles).toMatchObject([
+		{
+			role: "diner",
+		},
+	]);
+});
+
+async function registerUser(name, service) {
+	const testUser = {
+		name,
+		email: `${randomName()}@test.com`,
+		password: 'a',
+	};
+	const registerRes = await service.post('/api/auth').send(testUser);
+	registerRes.body.user.password = testUser.password;
+
+	return [registerRes.body.user, registerRes.body.token];
+}
