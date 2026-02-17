@@ -96,9 +96,6 @@ class DB {
       }
 
       return [users, more];
-    } catch (e) {
-      console.error(e);
-      throw e;
     } finally {
       connection.end();
     }
