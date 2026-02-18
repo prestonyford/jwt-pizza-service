@@ -130,6 +130,9 @@ class DB {
     try {
       await this.query(connection, `DELETE FROM userrole WHERE userId=?`, [userId]);
       await this.query(connection, `DELETE FROM user WHERE id=?`, [userId]);
+    } catch (e) {
+      console.error(e);
+      throw e;
     } finally {
       connection.end();
     }
