@@ -109,7 +109,7 @@ test('list users', async () => {
 		.get(`/api/user?page=0&limit=10&name=${name}`)
 		.set('Authorization', 'Bearer ' + userToken);
 	expect(listUsersRes.status).toBe(200);
-	const [users, more] = listUsersRes.body;
+	const { users, more } = listUsersRes.body;
 	expect(more).toBe(false);
 	expect(users.length).toBeGreaterThanOrEqual(1);
 	expect(users[0].id).toBe(user.id);
