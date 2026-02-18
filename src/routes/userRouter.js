@@ -6,7 +6,7 @@ const { authRouter, setAuth } = require('./authRouter.js');
 const userRouter = express.Router();
 
 userRouter.docs = [
-    {
+  {
     method: 'GET',
     path: '/api/user?page=1&limit=10&name=*',
     requiresAuth: true,
@@ -73,7 +73,15 @@ userRouter.delete(
   '/:userId',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
-    res.json({ message: 'not implemented' });
+    const user = req.user;
+    if (!user.isRole(Role.Admin)) {
+      return res.status(403).json({ message: 'unauthorized' });
+    }
+    if (!req.params.userId) {
+      return res.sendStatus(400);
+    }
+    await DB.deleteUser(req.params.userId)
+    return res.sendStatus(200);
   })
 );
 
@@ -82,8 +90,8 @@ userRouter.get(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
-    const [ users, more ] = await DB.getUsers(req.query.page, +req.query.limit, req.query.name);
-    res.json( { users, more } );
+    const [users, more] = await DB.getUsers(req.query.page, +req.query.limit, req.query.name);
+    res.json({ users, more });
   })
 );
 

@@ -75,7 +75,7 @@ class DB {
     }
   }
 
-    async getUsers(page = 0, limit = 10, nameFilter = '*') {
+  async getUsers(page = 0, limit = 10, nameFilter = '*') {
     const connection = await this.getConnection();
 
     const offset = page * limit;
@@ -120,6 +120,16 @@ class DB {
         await this.query(connection, query);
       }
       return this.getUser(email, password);
+    } finally {
+      connection.end();
+    }
+  }
+
+  async deleteUser(userId) {
+    const connection = await this.getConnection();
+    try {
+      await this.query(connection, `DELETE FROM userrole WHERE userId=?`, [userId]);
+      await this.query(connection, `DELETE FROM user WHERE id=?`, [userId]);
     } finally {
       connection.end();
     }
