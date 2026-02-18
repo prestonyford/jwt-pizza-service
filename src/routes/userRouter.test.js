@@ -144,7 +144,25 @@ test('admin can delete a user', async () => {
 })
 
 test('non-admin cannot delete a user', async () => {
+	// Create user to be deleted and check that it does indeed exist
+	const userToBeDeleted = await createUser();
+	let user = await DB.getUser(userToBeDeleted.email, userToBeDeleted.password);
+	expect(user.id).toBe(userToBeDeleted.id);
 
+	// Login as user, attempt to delete user
+	const userLoginRes = await request(app).put('/api/auth').send({ email: userA.email, password: userA.password });
+	const userToken = userLoginRes.body.token;
+
+	const deleteRes = await request(app)
+		.delete(`/api/user/${userToBeDeleted.id}`)
+		.set('Authorization', `Bearer ${userToken}`)
+		.send();
+
+	expect(deleteRes.status).toBe(401);
+
+	// Check user still exists
+	user = await DB.getUser(userToBeDeleted.email, userToBeDeleted.password);
+	expect(user.id).toBe(userToBeDeleted.id);
 })
 
 async function registerUser(name, service) {
