@@ -78,10 +78,10 @@ userRouter.delete(
       return res.status(403).json({ message: 'unauthorized' });
     }
     if (!req.params.userId) {
-      return res.sendStatus(400);
+      return res.status(400).json({ message: 'missing userId' });
     }
     await DB.deleteUser(req.params.userId)
-    return res.sendStatus(200);
+    return res.status(200).json({ message: 'ok' });
   })
 );
 
