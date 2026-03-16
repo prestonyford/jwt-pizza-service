@@ -17,6 +17,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   next();
 });
+app.use(metrics.latencyTracker);
 app.use(metrics.requestMethodTracker);
 app.use(metrics.activeUserTracker);
 

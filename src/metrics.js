@@ -11,6 +11,13 @@ const ACTIVE_WINDOW = 5 * 60 * 1000;
 let authSuccess = 0;
 let authFailure = 0;
 
+let pizzaSaleSuccess = 0;
+let pizzaSaleFailure = 0;
+let pizzaSaleRevenue = 0;
+
+const requestLatencies = [];
+const pizzaServiceLatencies = [];
+
 
 // Middleware to track requests by their method
 function requestMethodTracker(req, res, next) {
@@ -26,12 +33,38 @@ function activeUserTracker(req, res, next) {
 	next();
 }
 
+function latencyTracker(req, res, next) {
+	const start = process.hrtime.bigint();
+	res.on('finish', () => {
+		const end = process.hrtime.bigint();
+		const durationMs = Number(end - start) / 1_000_000;
+		requestLatencies.push(durationMs);
+	});
+	next();
+}
+
+function getAverage(arr) {
+	if (arr.length === 0) return 0;
+	const sum = arr.reduce((a, b) => a + b, 0);
+	return sum / arr.length;
+}
+
 function reportAuthAttempt(success) {
 	if (success) {
 		++authSuccess;
 	} else {
 		++authFailure;
 	}
+}
+
+function reportPizzaSale(success, latency, revenue = 0) {
+	if (success) {
+		++pizzaSaleSuccess;
+		pizzaSaleRevenue += revenue;
+	} else {
+		++pizzaSaleFailure;
+	}
+	pizzaServiceLatencies.push(latency);
 }
 
 function getActiveUserCount() {
@@ -79,6 +112,16 @@ setInterval(() => {
 	// cpu and memory usage
 	metrics.push(createMetric('cpu', getCpuUsagePercentage(), '%', 'gauge', 'asDouble', {}));
 	metrics.push(createMetric('memory', getMemoryUsagePercentage(), '%', 'gauge', 'asDouble', {}));
+
+	// pizza sales
+	metrics.push(createMetric('pizzaSaleSuccess', pizzaSaleSuccess, '1', 'sum', 'asInt', {}));
+	metrics.push(createMetric('pizzaSaleFailure', pizzaSaleFailure, '1', 'sum', 'asInt', {}));
+	metrics.push(createMetric('pizzaSaleRevenue', pizzaSaleRevenue, '1', 'sum', 'asDouble', {}));
+
+	// latency
+	metrics.push(createMetric('averageLatency', getAverage(requestLatencies), 'ms', 'gauge', 'asDouble', {}));
+	metrics.push(createMetric('pizzaServiceLatency', getAverage(pizzaServiceLatencies), 'ms', 'gauge', 'asDouble', {}));
+	requestLatencies.length = 0;
 
 	sendMetricToGrafana(metrics);
 	metrics.length = 0;
@@ -144,4 +187,4 @@ function sendMetricToGrafana(metrics) {
 		});
 }
 
-module.exports = { requestMethodTracker, activeUserTracker, reportAuthAttempt };
+module.exports = { requestMethodTracker, activeUserTracker, latencyTracker, reportAuthAttempt, reportPizzaSale };
