@@ -122,6 +122,7 @@ setInterval(() => {
 	metrics.push(createMetric('averageLatency', getAverage(requestLatencies), 'ms', 'gauge', 'asDouble', {}));
 	metrics.push(createMetric('pizzaServiceLatency', getAverage(pizzaServiceLatencies), 'ms', 'gauge', 'asDouble', {}));
 	requestLatencies.length = 0;
+	pizzaServiceLatencies.length = 0;
 
 	sendMetricToGrafana(metrics);
 	metrics.length = 0;
