@@ -4,8 +4,10 @@ const { Role, DB } = require('../database/database.js');
 const { authRouter } = require('./authRouter.js');
 const { asyncHandler, StatusCodeError } = require('../endpointHelper.js');
 const { reportPizzaSale } = require('../metrics.js');
+const Logger = require('pizza-logger');
 
 const orderRouter = express.Router();
+const logger = new Logger(config);
 
 orderRouter.docs = [
   {
@@ -80,15 +82,21 @@ orderRouter.post(
   asyncHandler(async (req, res) => {
     const orderReq = req.body;
     const order = await DB.addDinerOrder(req.user, orderReq);
-	  const start = process.hrtime.bigint();
+    const start = process.hrtime.bigint();
+    const request = { diner: { id: req.user.id, name: req.user.name, email: req.user.email }, order };
     const r = await fetch(`${config.factory.url}/api/order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', authorization: `Bearer ${config.factory.apiKey}` },
-      body: JSON.stringify({ diner: { id: req.user.id, name: req.user.name, email: req.user.email }, order }),
+      body: JSON.stringify(request),
     });
-		const end = process.hrtime.bigint();
-    const durationMs = Number(end - start) / 1_000_000;
+    
     const j = await r.json();
+    const { responseLog, jwt } = j;
+    const log = { request, response: responseLog };
+    logger.factoryLogger(log);
+
+    const end = process.hrtime.bigint();
+    const durationMs = Number(end - start) / 1_000_000;
     if (r.ok) {
       const revenue = order.items.reduce((acc, curr) => acc + curr.price, 0);
       reportPizzaSale(true, durationMs, revenue);

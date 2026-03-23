@@ -1,4 +1,4 @@
-sendLogToGrafana(event) {
+function sendLogToGrafana(event) {
 	const body = JSON.stringify(event);
 	fetch(`${config.url}`, {
 		method: 'post',
@@ -11,3 +11,5 @@ sendLogToGrafana(event) {
 		if (!res.ok) console.log('Failed to send log to Grafana');
 	});
 }
+
+module.exports = { sendLogToGrafana }

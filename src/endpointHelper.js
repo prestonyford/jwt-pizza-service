@@ -1,7 +1,13 @@
+const Logger = require("pizza-logger");
+const config = require("./config");
+
+const logger = new Logger(config);
+
 class StatusCodeError extends Error {
   constructor(message, statusCode) {
     super(message);
     this.statusCode = statusCode;
+    logger.unhandledErrorLogger(this);
   }
 }
 
