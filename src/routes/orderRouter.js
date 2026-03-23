@@ -91,7 +91,8 @@ orderRouter.post(
     });
     
     const j = await r.json();
-    const { responseLog, jwt } = j;
+    const responseLog = { ...j };
+    delete responseLog.jwt;
     const log = { request, response: responseLog };
     logger.factoryLogger(log);
 
