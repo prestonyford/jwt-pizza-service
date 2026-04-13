@@ -60,6 +60,7 @@ class Logger {
 	}
 
 	async sendLogToGrafana(event) {
+		if (typeof fetch !== "function") return;
 		// Log to Grafana
 		const body = JSON.stringify(event);
 		try {
